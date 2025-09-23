@@ -3,8 +3,8 @@ import { useGetCompounds } from "../api/useApi"
 
 const Home: React.FC = () => {
   const {data: compounds, error: compoundsError} = useGetCompounds()
-  const apiTest = (!compoundsError && compounds ?
-    compounds?.map(compound => (
+  const apiTest = (!compoundsError && compounds && Array.isArray(compounds) ?
+    compounds.map(compound => (
       <li key={compound.id}>
         <span>{compound.name} </span>
         <span>{compound.smiles}</span>
