@@ -1,23 +1,26 @@
+import { Search } from "lucide-react"
 import type React from "react"
-import { useGetCompounds } from "../api/useApi"
+import { Card, Col, Container, Row } from "react-bootstrap"
+import { Link } from "react-router-dom"
+import '../css/Home.css'
 
 const Home: React.FC = () => {
-  const {data: compounds, error: compoundsError} = useGetCompounds()
-  const apiTest = (!compoundsError && compounds && Array.isArray(compounds) ?
-    compounds.map(compound => (
-      <li key={compound.id}>
-        <span>{compound.name} </span>
-        <span>{compound.smiles}</span>
-      </li>
-    )) : 
-    <li>API Error!</li>
-  )
   return (
-    <div>
-      <h2>API Test</h2>
-      If the mock API works, compound SMILES will populate below.
-      {apiTest}
-    </div>
+    <Container>
+      <Row className="justify-content-center g-4">
+        <Col md={4}>
+          <Link to="/search" className="tool-link">
+            <Card className="h-100 shadow-sm tool-card">
+              <Card.Body className="d-flex flex-column align-items-center text-center p-4">
+                <Search size={48} className="mb-3 tool-icon text-muted" />
+                <Card.Title>Compound Search</Card.Title>
+                <Card.Text>Search for compounds</Card.Text>
+              </Card.Body>
+            </Card>
+          </Link>
+        </Col>
+      </Row>
+    </Container>
   )
 }
 
