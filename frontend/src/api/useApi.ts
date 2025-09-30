@@ -15,7 +15,7 @@ export function useSearchDatabaseMutation(
   options?: UseMutationOptions<Compound[], Error, {query: string}>
 ) {
   return useMutation<Compound[], Error, {query: string}>({
-    mutationFn: (params) => ApiService.post<Compound[]>('/search', params),
+    mutationFn: (params) => ApiService.post<Compound[]>('/substructure', params),
     ...options
   });
 }
