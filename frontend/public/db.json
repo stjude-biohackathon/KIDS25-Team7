@@ -1,5 +1,5 @@
 {
-  "compounds": [
+  "compoundsOld": [
     {"id": 1, "name": "Acetylcholine", "smiles": "CC(=O)OCC[N+](C)(C)C"},
     {"id": 2, "name": "Metacholine", "smiles": "CC(C[N+](C)(C)C)OC(=O)C"},
     {"id": 3, "name": "OxotremorineM", "smiles": "O=C1CCCN1CC#CC[N+](C)(C)C"},
@@ -20,5 +20,11 @@
     {"id": 18, "name": "Pomalidomide", "smiles": "C1CC(=O)NC(=O)C1N2C(=O)C3=C(C2=O)C(=CC=C3)N"},
     {"id": 19, "name": "Apremilast", "smiles": "CCOC1=C(C=CC(=C1)[C@@H](CS(=O)(=O)C)N2C(=O)C3=C(C2=O)C(=CC=C3)NC(=O)C)OC"},
     {"id": 20, "name": "Methicillin", "smiles": "CC1([C@@H](N2[C@H](S1)[C@@H](C2=O)NC(=O)C3=C(C=CC=C3OC)OC)C(=O)O)C"}
+  ],
+  "search": [
+    {"id": 1, "reg_number": "SJ101", "variant": "", "smiles": "c1ccccc1"},
+    {"id": 2, "reg_number": "SJ101", "variant": "A", "smiles": "c1ccccc1O"},
+    {"id": 3, "reg_number": "SJ101", "variant": "B", "smiles": "c1ccccc1N"},
+    {"id": 4, "reg_number": "SJ102", "variant": "", "smiles": "c1ccccc1CCC"}
   ]
 }
