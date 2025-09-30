@@ -22,7 +22,7 @@ export const ApiService = {
   // POST
   async post<T>(endpoint: string, data = {}): Promise<T> {
     try {
-      const response: AxiosResponse = await apiClient.post(endpoint, { data });
+      const response: AxiosResponse = await apiClient.post(endpoint, data);
       return response.data;
     } catch (error) {
       return this.handleError(error as AxiosError);
