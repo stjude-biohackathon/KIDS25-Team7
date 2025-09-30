@@ -4,6 +4,7 @@ import Home from "./pages/Home";
 import { Navigation } from "./components/Navigation";
 import NavbarHeightAdjuster from "./components/NavbarHeightAdjuster";
 import Search from "./pages/Search/Search";
+import Compound from "./pages/Compound";
 
 const Layout = () => (
   <div>
@@ -17,6 +18,7 @@ const router = createHashRouter(
     <Route path="/" element={<Layout />}>
       <Route index element={<Home />} />
       <Route path="search" element={<Search />} />
+      <Route path="compound" element={<Compound />} />
     </Route>
   )
 )
