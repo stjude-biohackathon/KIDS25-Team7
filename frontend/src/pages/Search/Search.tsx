@@ -3,7 +3,7 @@ import { Button, ButtonGroup, Card, Col, Container, Form, Modal, Pagination, Row
 import MoleculeStructure from '../../components/MoleculeStructure'
 import { KetcherEditor } from '../../components/KetcherEditor'
 import { cleanSmiles, useRDKit, buildLibraryAndGetMolecules, filterBySubstructure } from '../../utils/utils'
-import { useGetCompounds } from '../../api/useApi'
+import { useSearchDatabaseMutation } from '../../api/useApi'
 import '../../css/Search.css'
 
 type SearchMode = 'database' | 'custom'
@@ -26,7 +26,15 @@ const Search: React.FC = () => {
 
   const { RDKit, error: rdkitError } = useRDKit()
 
-  const { data: dbCompounds } = useGetCompounds()
+
+  const searchMutation = useSearchDatabaseMutation({
+    onSuccess: (data) => {
+      console.log('Search successful:', data);
+    },
+    onError: (error) => {
+      console.error('Search failed:', error);
+    }
+  });
 
   const handleSketcherExtract = (smiles: string) => {
     setSearchQuery(smiles)
@@ -42,10 +50,11 @@ const Search: React.FC = () => {
     }
 
     if (searchMode === 'database') {
-      if (dbCompounds && RDKit) {
-        const smilesArray = dbCompounds.map(compound => ({
+      searchMutation.mutate({ smiles: searchQuery })
+      if (searchMutation.isSuccess && RDKit) {
+        const smilesArray = searchMutation.data.map(compound => ({
           smiles: compound.smiles,
-          name: compound.name
+          name: compound.reg_number
         }))
 
         const { library, molecules } = buildLibraryAndGetMolecules(RDKit, smilesArray)
