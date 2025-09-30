@@ -5,6 +5,16 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vite + React + TS</title>
+    <script src="https://unpkg.com/@rdkit/rdkit/dist/RDKit_minimal.js"></script>
+    <script>
+      window
+        .initRDKitModule({ locateFile: (path) => `https://unpkg.com/@rdkit/rdkit/dist/RDKit_minimal.wasm` })
+        .then(function (RDKit) {
+          console.log("RDKit version: " + RDKit.version());
+          window.RDKit = RDKit;
+        })
+        .catch(() => {})
+    </script>
   </head>
   <body>
     <div id="root"></div>
