@@ -50,7 +50,7 @@ const Search: React.FC = () => {
     }
 
     if (searchMode === 'database') {
-      searchMutation.mutate({ smiles: searchQuery })
+      searchMutation.mutate({ query: searchQuery })
       if (searchMutation.isSuccess && RDKit) {
         const smilesArray = searchMutation.data.map(compound => ({
           smiles: compound.smiles,

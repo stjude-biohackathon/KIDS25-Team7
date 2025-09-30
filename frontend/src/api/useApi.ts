@@ -12,9 +12,9 @@ export function useGetCompounds(options?: UseQueryOptions<CompoundOld[]>) {
 }
 
 export function useSearchDatabaseMutation(
-  options?: UseMutationOptions<Compound[], Error, {smiles: string}>
+  options?: UseMutationOptions<Compound[], Error, {query: string}>
 ) {
-  return useMutation<Compound[], Error, {smiles: string}>({
+  return useMutation<Compound[], Error, {query: string}>({
     mutationFn: (params) => ApiService.post<Compound[]>('/search', params),
     ...options
   });
