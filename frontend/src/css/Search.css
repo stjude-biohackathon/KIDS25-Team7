@@ -1,0 +1,23 @@
+.results-grid {
+  overflow-y: auto;
+  
+}
+
+.result-card {
+  transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.result-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.result-card-header {
+  font-size: 0.75rem;
+  word-break: break-all;
+  background-color: #e9ecef;
+}
+
+.search-results {
+  height: calc(100vh - var(--navbar-height))
+}
