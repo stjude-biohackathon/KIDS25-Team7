@@ -157,7 +157,6 @@ export function filterBySubstructure(
 }
 
 export function molName(mol: SearchResults): string {
-  console.log(mol)
   return (mol.variant && mol.variant.length > 0 && mol.regNumber.length > 0 
           ? (mol.regNumber + "-" + mol.variant )
           : mol.regNumber.length > 0 ? mol.regNumber

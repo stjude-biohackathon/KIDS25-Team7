@@ -19,3 +19,22 @@ export function useGetCompoundDetail(regNumber: string, options?: UseQueryOption
     ...options
   });
 }
+
+export function useTextSearch(
+  regn?: string,
+  syn?: string,
+  cas?: string,
+  options?: UseQueryOptions<Compound[]>
+) {
+  const params: Record<string, string> = {};
+  if (regn) params.regn = regn;
+  if (syn) params.syn = syn;
+  if (cas) params.cas = cas;
+
+  return useQuery<Compound[]>({
+    queryKey: ['textSearch', regn, syn, cas],
+    queryFn: () => ApiService.get<Compound[]>('/textsearch/', params),
+    enabled: false,
+    ...options
+  });
+}

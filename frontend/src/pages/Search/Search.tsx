@@ -3,7 +3,7 @@ import { Button, ButtonGroup, Card, Col, Container, Form, Modal, Pagination, Row
 import MoleculeStructure from '../../components/MoleculeStructure'
 import { KetcherEditor } from '../../components/KetcherEditor'
 import { cleanSmiles, useRDKit, buildLibraryAndGetMolecules, filterBySubstructure, molName } from '../../utils/utils'
-import { useSearchDatabase } from '../../api/useApi'
+import { useSearchDatabase, useTextSearch } from '../../api/useApi'
 import '../../css/Search.css'
 import { Download } from 'lucide-react'
 import type { SearchMode, SearchResults } from '../../types/types'
@@ -17,23 +17,68 @@ const Search: React.FC = () => {
   const [results, setResults] = useState<SearchResults[]>([])
   const [hasSearched, setHasSearched] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
+  const [identifierFields, setIdentifierFields] = useState({
+    regn: '',
+    syn: '',
+    cas: ''
+  })
   const resultsPerPage = 9
 
   const { RDKit, error: rdkitError } = useRDKit()
   const { refetch: searchRefetch, isFetching: searchIsFetching } = useSearchDatabase(searchQuery)
+  const { refetch: textSearchRefetch, isFetching: textSearchIsFetching } = useTextSearch(
+    identifierFields.regn,
+    identifierFields.syn,
+    identifierFields.cas
+  )
   let navigate = useNavigate()
 
   const handleSketcherExtract = (smiles: string) => {
     setSearchQuery(smiles)
     setShowSketcherModal(false)
   }
-  
+
   const handleRouteNav = (regNum: string) => {
     const path = '/compound/' + regNum
-    if (searchMode === 'database') {navigate(path)}
+    if (searchMode === 'database') { navigate(path) }
   }
 
-  const handleSearch = async () => {
+  const handleIdentifierFieldChange = (field: string, value: string) => {
+    setIdentifierFields(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  const handleIdentifierSearch = async () => {
+    setResults([])
+
+    if (!identifierFields.regn.trim() && !identifierFields.syn.trim() && !identifierFields.cas.trim()) {
+      setResults([])
+      setHasSearched(true)
+      setCurrentPage(1)
+      return
+    }
+
+    const { data } = await textSearchRefetch()
+    if (data && RDKit) {
+      const smilesArray = data.map(compound => ({
+        smiles: compound.structure,
+        regNumber: compound.reg_number,
+        variant: compound.variant
+      }))
+
+      const { molecules } = buildLibraryAndGetMolecules(RDKit, smilesArray)
+      setResults(molecules)
+    } else {
+      setResults([])
+    }
+
+    setHasSearched(true)
+    setCurrentPage(1)
+  }
+
+  const handleSubstructureSearch = async () => {
     setResults([])
     if (!searchQuery.trim()) {
       setResults([])
@@ -196,16 +241,33 @@ const Search: React.FC = () => {
     ? 'Loading RDKit...'
     : (searchIsFetching ? 'Searching...' : 'Search')
 
+  const textSearchBtnText = (!RDKit && !rdkitError)
+    ? 'Loading RDKit...'
+    : (textSearchIsFetching ? 'Searching...' : 'Search')
+
+  const isIdentifierSearchDisabled = !RDKit || rdkitError ||
+    (!identifierFields.regn.trim() && !identifierFields.syn.trim() && !identifierFields.cas.trim())
+
   return (
     <Container fluid className="p-3 search-results">
       <Row className="h-100">
         <Col md={4} className="mb-3">
-          <Card>
+          <Card className="mb-3">
             <Card.Header>Substructure Search</Card.Header>
             <Card.Body>
               <Form>
                 <Form.Group className="mb-3">
-                  <Form.Label>Search Query (SMILES only)</Form.Label>
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <Form.Label className="mb-0">Search Query (SMILES only)</Form.Label>
+                    <Button
+                      variant="outline-primary"
+                      onClick={() => setShowSketcherModal(true)}
+                      style={{ whiteSpace: 'nowrap' }}
+                      size="sm"
+                    >
+                      Launch Sketcher
+                    </Button>
+                  </div>
                   <Form.Control
                     type="text"
                     value={searchQuery}
@@ -214,18 +276,10 @@ const Search: React.FC = () => {
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault()
-                        handleSearch()
+                        handleSubstructureSearch()
                       }
                     }}
                   />
-                  <Button
-                    variant="outline-primary"
-                    onClick={() => setShowSketcherModal(true)}
-                    style={{ whiteSpace: 'nowrap' }}
-                    className='mt-2'
-                  >
-                    Launch Sketcher
-                  </Button>
                 </Form.Group>
 
                 <Form.Group className="mb-3">
@@ -271,24 +325,89 @@ const Search: React.FC = () => {
 
                 <Button
                   variant="primary"
-                  onClick={handleSearch}
+                  onClick={handleSubstructureSearch}
                   className="w-100"
                   disabled={!RDKit || rdkitError}
                 >
                   {searchBtnText}
                 </Button>
+              </Form>
+            </Card.Body>
+          </Card>
+
+          <Card className="mb-1">
+            <Card.Header>Identifier Search</Card.Header>
+            <Card.Body>
+              <Form>
+                <Form.Group className="mb-1">
+                  <Form.Label>Reg Number</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={identifierFields.regn}
+                    onChange={(e) => handleIdentifierFieldChange('regn', e.target.value)}
+                    placeholder="Enter registration number"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        handleIdentifierSearch()
+                      }
+                    }}
+                  />
+                </Form.Group>
+
+                <Form.Group className="mb-1">
+                  <Form.Label>Synonym</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={identifierFields.syn}
+                    onChange={(e) => handleIdentifierFieldChange('syn', e.target.value)}
+                    placeholder="Enter synonym"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        handleIdentifierSearch()
+                      }
+                    }}
+                  />
+                </Form.Group>
+
+                <Form.Group className="mb-1">
+                  <Form.Label>CAS</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={identifierFields.cas}
+                    onChange={(e) => handleIdentifierFieldChange('cas', e.target.value)}
+                    placeholder="Enter CAS number"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        handleIdentifierSearch()
+                      }
+                    }}
+                  />
+                </Form.Group>
+
                 <Button
-                  variant={results.length < 1 ? "success-outline" : "success"}
-                  className="w-100 mt-3"
-                  onClick={handleExportCSV}
-                  disabled={results.length < 1}
+                  variant="primary"
+                  onClick={handleIdentifierSearch}
+                  className="w-100"
+                  disabled={isIdentifierSearchDisabled}
                 >
-                  <Download size={14} className="me-1" />
-                  Export CSV
+                  {textSearchBtnText}
                 </Button>
               </Form>
             </Card.Body>
           </Card>
+
+          <Button
+            variant={results.length < 1 ? "success-outline" : "success"}
+            className="w-100"
+            onClick={handleExportCSV}
+            disabled={results.length < 1}
+          >
+            <Download size={14} className="me-1" />
+            Export CSV
+          </Button>
         </Col>
 
         <Col md={8} className="d-flex h-100">
@@ -313,7 +432,7 @@ const Search: React.FC = () => {
                 </div>
               ) : results.length === 0 ? (
                 <div className="text-center text-muted p-5">
-                  {searchQuery.trim() === ''
+                  {searchQuery.trim() === '' && !identifierFields.regn.trim() && !identifierFields.syn.trim() && !identifierFields.cas.trim()
                     ? 'Please enter a search query'
                     : searchMode === 'custom' && !customSmiles.trim()
                       ? 'Please provide a list of SMILES to search'
