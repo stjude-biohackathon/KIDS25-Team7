@@ -1,8 +1,10 @@
 import { useQuery, type UseQueryOptions } from '@tanstack/react-query';
-import type { Compound, CompoundDetail } from '../types/types';
+import type { Compound, CompoundDetail, VariantDetail } from '../types/types';
 import { ApiService } from './api.service';
 
-export function useSearchDatabase(query: string, options?: UseQueryOptions<Compound[]>) {
+type QueryOptions<T> = Omit<UseQueryOptions<T, Error, T, readonly unknown[]>, 'queryKey' | 'queryFn'>;
+
+export function useSearchDatabase(query: string, options?: QueryOptions<Compound[]>) {
   return useQuery<Compound[]>({
     queryKey: ['search', query],
     queryFn: () => ApiService.get<Compound[]>('/substructure/', { query }),
@@ -11,7 +13,7 @@ export function useSearchDatabase(query: string, options?: UseQueryOptions<Compo
   });
 }
 
-export function useGetCompoundDetail(regNumber: string, options?: UseQueryOptions<CompoundDetail>) {
+export function useGetCompoundDetail(regNumber: string, options?: QueryOptions<CompoundDetail>) {
   return useQuery<CompoundDetail>({
     queryKey: ['compound', regNumber],
     queryFn: () => ApiService.get<CompoundDetail>(`/regnumber/${regNumber}`),
@@ -20,11 +22,20 @@ export function useGetCompoundDetail(regNumber: string, options?: UseQueryOption
   });
 }
 
+export function useGetVariantDetail(varNumber: string, options?: QueryOptions<VariantDetail>) {
+  return useQuery<VariantDetail>({
+    queryKey: ['variant', varNumber],
+    queryFn: () => ApiService.get<VariantDetail>(`/variant/${varNumber}`),
+    enabled: !!varNumber,
+    ...options
+  });
+}
+
 export function useTextSearch(
   regn?: string,
   syn?: string,
   cas?: string,
-  options?: UseQueryOptions<Compound[]>
+  options?: QueryOptions<Compound[]>
 ) {
   const params: Record<string, string> = {};
   if (regn) params.regn = regn;

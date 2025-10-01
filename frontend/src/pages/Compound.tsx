@@ -3,12 +3,32 @@ import { useParams } from "react-router-dom";
 import { Card, Col, Container, Row, Spinner, Alert, Badge } from "react-bootstrap";
 import MoleculeStructure from "../components/MoleculeStructure";
 import { useRDKit } from "../utils/utils";
-import { useGetCompoundDetail } from "../api/useApi";
+import { useGetCompoundDetail, useGetVariantDetail } from "../api/useApi";
+import { useNavigate } from 'react-router-dom'
 
 const Compound: React.FC = () => {
-  const { regNumber } = useParams<{ regNumber: string }>();
+  const { regNumber, varNumber } = useParams<{ regNumber: string; varNumber?: string }>();
   const { RDKit, error: rdkitError } = useRDKit();
-  const { data: compound, isLoading, error } = useGetCompoundDetail(regNumber || '');
+  let navigate = useNavigate()
+  
+  const { data: compound, isLoading: compoundLoading, error: compoundError } = useGetCompoundDetail(
+    regNumber || '', 
+    { enabled: !!regNumber && !varNumber }
+  );
+  
+  const { data: variant, isLoading: variantLoading, error: variantError } = useGetVariantDetail(
+    varNumber || '',
+    { enabled: !!varNumber }
+  );
+
+  const handleRouteNav = (regNum: string, varNum: string) => {
+    const path = '/compound/' + regNum + '/' + varNum
+    navigate(path)
+  }
+
+  const isLoading = compoundLoading || variantLoading;
+  const error = compoundError || variantError;
+  const isVariantView = !!varNumber && !!variant;
 
   if (!regNumber) {
     return (
@@ -26,7 +46,7 @@ const Compound: React.FC = () => {
         <Spinner animation="border" role="status">
           <span className="visually-hidden">Loading...</span>
         </Spinner>
-        <p className="mt-2">Loading compound details...</p>
+        <p className="mt-2">Loading {isVariantView ? 'variant' : 'compound'} details...</p>
       </Container>
     );
   }
@@ -35,21 +55,30 @@ const Compound: React.FC = () => {
     return (
       <Container className="mt-4">
         <Alert variant="danger">
-          Error loading compound: {error instanceof Error ? error.message : 'Unknown error'}
+          Error loading {isVariantView ? 'variant' : 'compound'}: {error instanceof Error ? error.message : 'Unknown error'}
         </Alert>
       </Container>
     );
   }
 
-  if (!compound) {
+  if (!compound && !variant) {
     return (
       <Container className="mt-4">
         <Alert variant="info">
-          No compound found with registration number: {regNumber}
+          No {isVariantView ? 'variant' : 'compound'} found with {isVariantView ? `variant number: ${varNumber}` : `registration number: ${regNumber}`}
         </Alert>
       </Container>
     );
   }
+
+  const displayId = isVariantView 
+    ? `${variant!.reg_number}-${variant!.variant}` 
+    : compound!.reg_number;
+  const structure = isVariantView ? variant!.structure : compound!.structure;
+  const iupacName = isVariantView ? variant!.iupac_name : compound!.iupac_name;
+  const formula = isVariantView ? variant!.full_formula : compound!.base_formula;
+  const formulaWeight = isVariantView ? variant!.full_formula_weight : compound!.base_formula_weight;
+  const synonyms = isVariantView ? variant!.synonyms : compound!.synonyms;
 
   return (
     <Container fluid className="mt-4">
@@ -57,15 +86,18 @@ const Compound: React.FC = () => {
         <Col md={4}>
           <Card className="shadow-sm">
             <Card.Header>
-              <h5 className="mb-0">{compound.reg_number}</h5>
+              <h5 className="mb-0">{displayId}</h5>
+              {isVariantView && (
+                <small className="text-muted">Variant of {variant!.reg_number}</small>
+              )}
             </Card.Header>
             <Card.Body className="d-flex align-items-center justify-content-center">
               <MoleculeStructure
-                id={`compound-${compound.reg_number}`}
-                molName={compound.reg_number}
+                id={`${isVariantView ? 'variant' : 'compound'}-${displayId}`}
+                molName={displayId}
                 rdkit={RDKit}
                 error={rdkitError}
-                structure={compound.structure}
+                structure={structure}
                 width={350}
                 height={300}
               />
@@ -76,31 +108,45 @@ const Compound: React.FC = () => {
         <Col md={8}>
           <Card className="shadow-sm">
             <Card.Header>
-              <h5 className="mb-0">Compound Details</h5>
+              <h5 className="mb-0">{isVariantView ? 'Variant' : 'Compound'} Details</h5>
             </Card.Header>
             <Card.Body>
               <div className="mb-4">
                 <h6 className="text-muted mb-2">IUPAC Name</h6>
-                <p className="mb-0">{compound.iupac_name}</p>
+                <p className="mb-0">{iupacName}</p>
               </div>
 
               <Row className="mb-4">
                 <Col md={6}>
-                  <h6 className="text-muted mb-2">Base Formula</h6>
-                  <p className="mb-0">{compound.base_formula}</p>
+                  <h6 className="text-muted mb-2">{isVariantView ? 'Full Formula' : 'Base Formula'}</h6>
+                  <p className="mb-0">{formula}</p>
                 </Col>
                 <Col md={6}>
                   <h6 className="text-muted mb-2">Molecular Weight</h6>
-                  <p className="mb-0">{compound.base_formula_weight.toFixed(4)} g/mol</p>
+                  <p className="mb-0">{formulaWeight.toFixed(4)} g/mol</p>
                 </Col>
               </Row>
 
-              {compound.variants && compound.variants.length > 0 && (
+              {isVariantView && variant!.cas && (
+                <div className="mb-4">
+                  <h6 className="text-muted mb-2">CAS Number</h6>
+                  <p className="mb-0">{variant!.cas}</p>
+                </div>
+              )}
+
+              {isVariantView && variant!.smiles && (
+                <div className="mb-4">
+                  <h6 className="text-muted mb-2">SMILES</h6>
+                  <p className="mb-0 font-monospace small">{variant!.smiles}</p>
+                </div>
+              )}
+
+              {!isVariantView && compound!.variants && compound!.variants.length > 0 && (
                 <div className="mb-4">
                   <h6 className="text-muted mb-2">Variants</h6>
                   <div className="d-flex flex-wrap gap-2">
-                    {compound.variants.map((variant, idx) => (
-                      <Badge key={idx} bg="primary" pill>
+                    {compound!.variants.map((variant, idx) => (
+                      <Badge key={idx} bg="primary" pill onClick={() => handleRouteNav(compound!.reg_number,variant.full_variant)}>
                         {variant.full_variant}
                       </Badge>
                     ))}
@@ -108,11 +154,24 @@ const Compound: React.FC = () => {
                 </div>
               )}
 
-              {compound.synonyms && compound.synonyms.length > 0 && (
+              {isVariantView && variant!.fragments && variant!.fragments.length > 0 && (
+                <div className="mb-4">
+                  <h6 className="text-muted mb-2">Fragments</h6>
+                  <div className="d-flex flex-wrap gap-2">
+                    {variant!.fragments.map((fragment, idx) => (
+                      <Badge key={idx} bg="info" pill>
+                        {fragment}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {synonyms && synonyms.length > 0 && (
                 <div>
                   <h6 className="text-muted mb-2">Synonyms</h6>
                   <div className="d-flex flex-wrap gap-2">
-                    {compound.synonyms.map((synonym, idx) => (
+                    {synonyms.map((synonym, idx) => (
                       <Badge key={idx} bg="secondary" pill>
                         {synonym}
                       </Badge>

@@ -21,6 +21,7 @@ const router = createHashRouter(
       <Route path="search" element={<Search />} />
       <Route path="compound" element={<Compound />} />
       <Route path="compound/:regNumber" element={<Compound />} />
+      <Route path="compound/:regNumber/:varNumber" element={<></>} />
       <Route path="register" element={<Register />} />
 
     </Route>
