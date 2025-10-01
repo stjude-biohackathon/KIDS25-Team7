@@ -27,6 +27,7 @@ const Register: React.FC = () => {
   });
 
   const [showSketcherModal, setShowSketcherModal] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   const handleSketcherExtract = (smiles: string, isEdit: boolean = false) => {
     if (isEdit) {
@@ -105,7 +106,6 @@ const Register: React.FC = () => {
       </div>
     ));
 
-
   return (
     <Container className="py-3">
       <Tabs defaultActiveKey="register" id="register-tabs">
@@ -123,7 +123,7 @@ const Register: React.FC = () => {
                 <Button
                   variant="outline-secondary"
                   className="mt-2"
-                  onClick={() => setShowSketcherModal(true)}
+                  onClick={() => { setIsEditMode(false); setShowSketcherModal(true); }}
                 >
                   Draw Structure
                 </Button>
@@ -156,6 +156,7 @@ const Register: React.FC = () => {
             </Button>
           </Form>
         </Tab>
+
         <Tab eventKey="edit" title="Edit Compound">
           <Form className="mt-3">
             <Row className="mb-3">
@@ -170,7 +171,7 @@ const Register: React.FC = () => {
                 <Button
                   variant="outline-secondary"
                   className="mt-2"
-                  onClick={() => setShowSketcherModal(true)}
+                  onClick={() => { setIsEditMode(true); setShowSketcherModal(true); }}
                 >
                   Draw Structure
                 </Button>
@@ -215,7 +216,10 @@ const Register: React.FC = () => {
           <Modal.Title>Draw Molecular Structure</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <KetcherEditor key={'ketcher'} onExtract={(smiles) => handleSketcherExtract(smiles)} />
+          <KetcherEditor
+            key={'ketcher'}
+            onExtract={(smiles) => handleSketcherExtract(smiles, isEditMode)}
+          />
         </Modal.Body>
       </Modal>
     </Container>
