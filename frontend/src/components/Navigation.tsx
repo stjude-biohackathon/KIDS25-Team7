@@ -12,7 +12,7 @@ export const Navigation: React.FC = () => {
       >
         <Container fluid>
           <Navbar.Brand style={{ display: 'flex' }}>
-            <span>Searchr</span>
+            <span>Radar</span>
           </Navbar.Brand>
 
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
