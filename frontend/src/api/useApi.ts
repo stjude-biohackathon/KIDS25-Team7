@@ -14,7 +14,7 @@ export function useSearchDatabase(query: string, options?: UseQueryOptions<Compo
 export function useGetCompoundDetail(regNumber: string, options?: UseQueryOptions<CompoundDetail>) {
   return useQuery<CompoundDetail>({
     queryKey: ['compound', regNumber],
-    queryFn: () => ApiService.get<CompoundDetail>(`/compounds/${regNumber}`),
+    queryFn: () => ApiService.get<CompoundDetail>(`/regnumber/${regNumber}`),
     enabled: !!regNumber,
     ...options
   });
