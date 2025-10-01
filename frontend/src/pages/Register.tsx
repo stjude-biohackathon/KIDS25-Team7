@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Tab, Tabs, Container, Row, Col, Form, Button } from 'react-bootstrap';
+import { Tab, Tabs, Container, Row, Col, Form, Button, Modal } from 'react-bootstrap';
+import { KetcherEditor } from '../components/KetcherEditor'; 
 
 interface Variant {
   cas?: string;
@@ -8,7 +9,7 @@ interface Variant {
 
 interface Compound {
   smiles: string;
-  synonyms?: string[]; // Single field for all synonyms
+  synonyms?: string[]; 
   variants: Variant[];
 }
 
@@ -25,7 +26,17 @@ const Register: React.FC = () => {
     variants: [],
   });
 
-  // ------------------ Helpers ------------------
+  const [showSketcherModal, setShowSketcherModal] = useState(false);
+
+  const handleSketcherExtract = (smiles: string, isEdit: boolean = false) => {
+    if (isEdit) {
+      setEditCompound({ ...editCompound, smiles });
+    } else {
+      setRegCompound({ ...regCompound, smiles });
+    }
+    setShowSketcherModal(false);
+  };
+
   const handleCompoundChange = (
     compound: Compound,
     setCompound: React.Dispatch<React.SetStateAction<Compound>>,
@@ -88,22 +99,16 @@ const Register: React.FC = () => {
             />
           </Col>
           <Col xs="auto">
-            <Button
-              variant="outline-danger"
-              onClick={() => removeVariant(compound, setCompound, i)}
-            >
-              X
-            </Button>
+            <Button variant="outline-danger" onClick={() => removeVariant(compound, setCompound, i)}>X</Button>
           </Col>
         </Row>
       </div>
     ));
 
-  // ------------------ Render ------------------
+
   return (
     <Container className="py-3">
       <Tabs defaultActiveKey="register" id="register-tabs">
-        {/* ---------------- Register Page ---------------- */}
         <Tab eventKey="register" title="Register Compound">
           <Form className="mt-3">
             <Row className="mb-3">
@@ -115,6 +120,13 @@ const Register: React.FC = () => {
                   value={regCompound.smiles}
                   onChange={(e) => handleCompoundChange(regCompound, setRegCompound, 'smiles', e.target.value)}
                 />
+                <Button
+                  variant="outline-secondary"
+                  className="mt-2"
+                  onClick={() => setShowSketcherModal(true)}
+                >
+                  Draw Structure
+                </Button>
               </Col>
             </Row>
 
@@ -144,8 +156,6 @@ const Register: React.FC = () => {
             </Button>
           </Form>
         </Tab>
-
-        {/* ---------------- Edit Page ---------------- */}
         <Tab eventKey="edit" title="Edit Compound">
           <Form className="mt-3">
             <Row className="mb-3">
@@ -157,6 +167,13 @@ const Register: React.FC = () => {
                   value={editCompound.smiles}
                   onChange={(e) => handleCompoundChange(editCompound, setEditCompound, 'smiles', e.target.value)}
                 />
+                <Button
+                  variant="outline-secondary"
+                  className="mt-2"
+                  onClick={() => setShowSketcherModal(true)}
+                >
+                  Draw Structure
+                </Button>
               </Col>
             </Row>
 
@@ -187,6 +204,20 @@ const Register: React.FC = () => {
           </Form>
         </Tab>
       </Tabs>
+
+      <Modal
+        show={showSketcherModal}
+        onHide={() => setShowSketcherModal(false)}
+        size="xl"
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Draw Molecular Structure</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <KetcherEditor key={'ketcher'} onExtract={(smiles) => handleSketcherExtract(smiles)} />
+        </Modal.Body>
+      </Modal>
     </Container>
   );
 };
