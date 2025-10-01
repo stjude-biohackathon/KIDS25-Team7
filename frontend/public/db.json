@@ -21,10 +21,10 @@
     {"id": 19, "name": "Apremilast", "smiles": "CCOC1=C(C=CC(=C1)[C@@H](CS(=O)(=O)C)N2C(=O)C3=C(C2=O)C(=CC=C3)NC(=O)C)OC"},
     {"id": 20, "name": "Methicillin", "smiles": "CC1([C@@H](N2[C@H](S1)[C@@H](C2=O)NC(=O)C3=C(C=CC=C3OC)OC)C(=O)O)C"}
   ],
-  "search": [
-    {"id": 1, "reg_number": "SJ101", "variant": "", "smiles": "c1ccccc1"},
-    {"id": 2, "reg_number": "SJ101", "variant": "A", "smiles": "c1ccccc1O"},
-    {"id": 3, "reg_number": "SJ101", "variant": "B", "smiles": "c1ccccc1N"},
-    {"id": 4, "reg_number": "SJ102", "variant": "", "smiles": "c1ccccc1CCC"}
+  "substructure": [
+    {"id": 1, "reg_number": "SJ101", "variant": "", "structure": "c1ccccc1"},
+    {"id": 2, "reg_number": "SJ101", "variant": "A", "structure": "c1ccccc1O"},
+    {"id": 3, "reg_number": "SJ101", "variant": "B", "structure": "c1ccccc1N"},
+    {"id": 4, "reg_number": "SJ102", "variant": "", "structure": "c1ccccc1CCC"}
   ]
 }
