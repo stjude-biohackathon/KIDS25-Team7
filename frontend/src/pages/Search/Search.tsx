@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Button, ButtonGroup, Card, Col, Container, Form, Modal, Pagination, Row, ToggleButton } from 'react-bootstrap'
 import MoleculeStructure from '../../components/MoleculeStructure'
 import { KetcherEditor } from '../../components/KetcherEditor'
-import { cleanSmiles, useRDKit, buildLibraryAndGetMolecules, filterBySubstructure, molName } from '../../utils/utils'
+import { cleanSmiles, useRDKit, buildLibraryAndGetMolecules, filterBySubstructure, molName, EXAMPLE_SMILES } from '../../utils/utils'
 import { useSearchDatabase, useTextSearch } from '../../api/useApi'
 import '../../css/Search.css'
 import { Download } from 'lucide-react'
@@ -23,6 +23,13 @@ const Search: React.FC = () => {
     cas: ''
   })
   const resultsPerPage = 9
+
+  const exampleSearch = 'N1C(=O)c2ccccc2C1=O'
+  const handleLoadExampleData = () => {
+    setCustomSmiles(EXAMPLE_SMILES.join("\r\n"))
+    setSearchQuery(exampleSearch)
+    setCurrentPage(1)
+  }
 
   const { RDKit, error: rdkitError } = useRDKit()
   const { refetch: searchRefetch, isFetching: searchIsFetching } = useSearchDatabase(searchQuery)
@@ -312,7 +319,12 @@ const Search: React.FC = () => {
 
                 {searchMode === 'custom' && (
                   <Form.Group className="mb-3">
-                    <Form.Label>Custom SMILES List</Form.Label>
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                      <Form.Label>Custom SMILES List</Form.Label>
+                      <Button className="me-2" onClick={handleLoadExampleData} variant="primary">
+                        Load Examples
+                      </Button>
+                    </div>
                     <Form.Control
                       as="textarea"
                       rows={10}
