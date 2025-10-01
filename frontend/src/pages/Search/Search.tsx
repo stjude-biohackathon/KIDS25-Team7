@@ -2,17 +2,11 @@ import React, { useState } from 'react'
 import { Button, ButtonGroup, Card, Col, Container, Form, Modal, Pagination, Row, ToggleButton } from 'react-bootstrap'
 import MoleculeStructure from '../../components/MoleculeStructure'
 import { KetcherEditor } from '../../components/KetcherEditor'
-import { cleanSmiles, useRDKit, buildLibraryAndGetMolecules, filterBySubstructure } from '../../utils/utils'
+import { cleanSmiles, useRDKit, buildLibraryAndGetMolecules, filterBySubstructure, molName } from '../../utils/utils'
 import { useSearchDatabase } from '../../api/useApi'
 import '../../css/Search.css'
-
-type SearchMode = 'database' | 'custom'
-
-interface SearchResults {
-  smiles: string
-  name: string | null
-  index: number
-}
+import { Download } from 'lucide-react'
+import type { SearchMode, SearchResults } from '../../types/types'
 
 const Search: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('')
@@ -25,7 +19,7 @@ const Search: React.FC = () => {
   const resultsPerPage = 9
 
   const { RDKit, error: rdkitError } = useRDKit()
-  const {refetch: searchRefetch} = useSearchDatabase(searchQuery)
+  const { refetch: searchRefetch, isFetching: searchIsFetching } = useSearchDatabase(searchQuery)
 
   const handleSketcherExtract = (smiles: string) => {
     setSearchQuery(smiles)
@@ -33,6 +27,7 @@ const Search: React.FC = () => {
   }
 
   const handleSearch = async () => {
+    setResults([])
     if (!searchQuery.trim()) {
       setResults([])
       setHasSearched(true)
@@ -41,11 +36,14 @@ const Search: React.FC = () => {
     }
 
     if (searchMode === 'database') {
+
       const { data } = await searchRefetch()
       if (data && RDKit) {
         const smilesArray = data.map(compound => ({
           smiles: compound.structure,
-          name: compound.reg_number
+          //name: compound.variant && compound.variant.length > 0 ? compound.reg_number + "-" + compound.variant : compound.reg_number,
+          regNumber: compound.reg_number,
+          variant: compound.variant
         }))
 
         const { library, molecules } = buildLibraryAndGetMolecules(RDKit, smilesArray)
@@ -85,6 +83,44 @@ const Search: React.FC = () => {
     setHasSearched(true)
     setCurrentPage(1)
   }
+
+  const handleExportCSV = () => {
+    const headers: string[] = ['regNumber', 'variant', 'smiles']
+    const rows: string[][] = []
+    rows.push(headers)
+    for (const line of results) {
+      const row: string[] = []
+      row.push(line.regNumber)
+      line.variant ? row.push(line.variant) : row.push('')
+      row.push(line.smiles)
+      rows.push(row)
+    }
+    const csvString = rows.map(row =>
+      row.map(cell => {
+        const cellStr = cell.toString();
+        // escape cells that contain commas, quotes, or newlines
+        if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+          return `"${cellStr.replace(/"/g, '""')}"`;
+        }
+        return cellStr;
+      }).join(',')
+    ).join('\n');
+    // add a character at the start to tell Excel it's utf-8 encoding and avoid weird characters
+    const blob = new Blob(['\uFEFF' + csvString], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', new Date().toISOString().split('T')[0]);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+  }
+
 
   const totalPages = Math.ceil(results.length / resultsPerPage)
   const indexOfLastResult = currentPage * resultsPerPage
@@ -150,6 +186,10 @@ const Search: React.FC = () => {
     )
   }
 
+  const searchBtnText = (!RDKit && !rdkitError)
+    ? 'Loading RDKit...'
+    : (searchIsFetching ? 'Searching...' : 'Search')
+
   return (
     <Container fluid className="p-3 search-results">
       <Row className="h-100">
@@ -159,7 +199,7 @@ const Search: React.FC = () => {
             <Card.Body>
               <Form>
                 <Form.Group className="mb-3">
-                  <Form.Label>Search Query (SMILES/SMARTS)</Form.Label>
+                  <Form.Label>Search Query (SMILES only)</Form.Label>
                   <Form.Control
                     type="text"
                     value={searchQuery}
@@ -229,7 +269,16 @@ const Search: React.FC = () => {
                   className="w-100"
                   disabled={!RDKit || rdkitError}
                 >
-                  {!RDKit && !rdkitError ? 'Loading RDKit...' : 'Search'}
+                  {searchBtnText}
+                </Button>
+                <Button
+                  variant={results.length < 1 ? "success-outline" : "success"}
+                  className="w-100 mt-3"
+                  onClick={handleExportCSV}
+                  disabled={results.length < 1}
+                >
+                  <Download size={14} className="me-1" />
+                  Export CSV
                 </Button>
               </Form>
             </Card.Body>
@@ -245,6 +294,7 @@ const Search: React.FC = () => {
                   <span className="ms-2 text-muted">
                     ({results.length} {results.length === 1 ? 'match' : 'matches'} found,
                     showing {indexOfFirstResult + 1}-{Math.min(indexOfLastResult, results.length)})
+                    {results.length > 1000 ? 'maximum' : ''}
                   </span>
                 )}
               </div>
@@ -269,13 +319,13 @@ const Search: React.FC = () => {
                   {currentResults.map((mol, idx) => (
                     <Col key={`${mol.index}-${idx}`}>
                       <Card className="results-card h-100">
-                        <Card.Header className="results-card-header text-truncate" title={mol.name || mol.smiles}>
-                          {mol.name || mol.smiles}
+                        <Card.Header className="results-card-header text-truncate" title={molName(mol)}>
+                          {molName(mol)}
                         </Card.Header>
                         <Card.Body className="d-flex align-items-center justify-content-center">
                           <MoleculeStructure
                             id={`mol-${mol.index}-${idx}`}
-                            molName={mol.name || undefined}
+                            molName={mol.regNumber || undefined}
                             rdkit={RDKit}
                             error={rdkitError}
                             structure={mol.smiles}

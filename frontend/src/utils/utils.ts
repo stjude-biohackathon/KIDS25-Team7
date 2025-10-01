@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { RDKitModule, SubstructLibrary } from "@rdkit/rdkit";
+import type { SearchResults } from "../types/types";
 
 export const EXAMPLE_SMILES = [
   'CC(=O)OCC[N+](C)(C)C	Acetylcholine',
@@ -26,32 +27,36 @@ export const EXAMPLE_SMILES = [
 
 interface MoleculeData {
   smiles: string;
-  name: string | null;
+  regNumber: string;
+  variant: string | null;
   index: number;
 }
 
-export function cleanSmiles(rawSmiles: string): {smiles: string, name: string | null} {
+export function cleanSmiles(rawSmiles: string): {smiles: string, regNumber: string, variant: null} {
     const trimmed = rawSmiles.trim();
     if (trimmed.includes('\t')) {
         const parts = trimmed.split('\t', 2);
         return {
             smiles: parts[0].trim(),
-            name: parts[1]?.trim() || null
+            regNumber: parts[1]?.trim() || '',
+            variant: null
         };
     } else if (trimmed.includes(';')) {
         const parts = trimmed.split(';', 2);
         return {
             smiles: parts[0].trim(),
-            name: parts[1]?.trim() || null
+            regNumber: parts[1]?.trim() || '',
+            variant: null
         };
     } else if (trimmed.includes(' ')) {
         const parts = trimmed.split(' ', 2);
         return {
             smiles: parts[0].trim(),
-            name: parts[1]?.trim() || null
+            regNumber: parts[1]?.trim() || '',
+            variant: null
         };
     } else {
-        return { smiles: trimmed, name: null };
+        return { smiles: trimmed, regNumber: '', variant: null };
     }
 }
 
@@ -88,7 +93,7 @@ export const useRDKit = () => {
 
 export function buildLibraryAndGetMolecules(
   RDKit: RDKitModule | null,
-  smilesArray: Array<{ smiles: string, name: string | null }>
+  smilesArray: Array<{ smiles: string, regNumber: string, variant: string | null }>
 ): { library: SubstructLibrary | null, molecules: MoleculeData[] } {
   if (!RDKit || smilesArray.length === 0) {
     return { library: null, molecules: [] };
@@ -105,7 +110,8 @@ export function buildLibraryAndGetMolecules(
           if (molIndex >= 0) {
             validMolecules.push({
               smiles: molData.smiles,
-              name: molData.name,
+              regNumber: molData.regNumber,
+              variant: molData.variant,
               index: molIndex
             });
           }
@@ -148,4 +154,12 @@ export function filterBySubstructure(
   } finally {
     qmol.delete();
   }
+}
+
+export function molName(mol: SearchResults): string {
+  console.log(mol)
+  return (mol.variant && mol.variant.length > 0 && mol.regNumber.length > 0 
+          ? (mol.regNumber + "-" + mol.variant )
+          : mol.regNumber.length > 0 ? mol.regNumber
+          : mol.smiles)
 }
