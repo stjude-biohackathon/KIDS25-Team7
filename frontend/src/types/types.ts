@@ -15,6 +15,20 @@ export interface CompoundDetail {
   synonyms: string[];
 }
 
+export interface VariantDetail {
+  variant_id: number;
+  reg_number: string;
+  variant: string;
+  structure: string;
+  smiles: string;
+  cas: string;
+  iupac_name: string;
+  full_formula: string;
+  full_formula_weight: number;
+  synonyms: string[];
+  fragments: string[];
+}
+
 export interface Compound {
   reg_number: string;
   variant: string | null;
