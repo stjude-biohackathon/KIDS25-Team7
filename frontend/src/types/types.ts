@@ -7,5 +7,5 @@ export interface CompoundOld {
 export interface Compound {
   reg_number: string;
   variant: string | null;
-  smiles: string;
+  structure: string;
 }

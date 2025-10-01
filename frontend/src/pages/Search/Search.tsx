@@ -44,7 +44,7 @@ const Search: React.FC = () => {
       const { data } = await searchRefetch()
       if (data && RDKit) {
         const smilesArray = data.map(compound => ({
-          smiles: compound.smiles,
+          smiles: compound.structure,
           name: compound.reg_number
         }))
 
