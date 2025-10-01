@@ -7,6 +7,7 @@ import { useSearchDatabase } from '../../api/useApi'
 import '../../css/Search.css'
 import { Download } from 'lucide-react'
 import type { SearchMode, SearchResults } from '../../types/types'
+import { useNavigate } from 'react-router-dom'
 
 const Search: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('')
@@ -20,10 +21,16 @@ const Search: React.FC = () => {
 
   const { RDKit, error: rdkitError } = useRDKit()
   const { refetch: searchRefetch, isFetching: searchIsFetching } = useSearchDatabase(searchQuery)
+  let navigate = useNavigate()
 
   const handleSketcherExtract = (smiles: string) => {
     setSearchQuery(smiles)
     setShowSketcherModal(false)
+  }
+  
+  const handleRouteNav = (regNum: string) => {
+    const path = '/compound/' + regNum
+    if (searchMode === 'database') {navigate(path)}
   }
 
   const handleSearch = async () => {
@@ -41,7 +48,6 @@ const Search: React.FC = () => {
       if (data && RDKit) {
         const smilesArray = data.map(compound => ({
           smiles: compound.structure,
-          //name: compound.variant && compound.variant.length > 0 ? compound.reg_number + "-" + compound.variant : compound.reg_number,
           regNumber: compound.reg_number,
           variant: compound.variant
         }))
@@ -318,8 +324,8 @@ const Search: React.FC = () => {
                 <Row xs={1} md={3} className="g-4">
                   {currentResults.map((mol, idx) => (
                     <Col key={`${mol.index}-${idx}`}>
-                      <Card className="results-card h-100">
-                        <Card.Header className="results-card-header text-truncate" title={molName(mol)}>
+                      <Card className="result-card h-100" onClick={() => handleRouteNav(mol.regNumber)}>
+                        <Card.Header className="result-card-header text-truncate" title={molName(mol)}>
                           {molName(mol)}
                         </Card.Header>
                         <Card.Body className="d-flex align-items-center justify-content-center">
