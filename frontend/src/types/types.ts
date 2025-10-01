@@ -9,3 +9,12 @@ export interface Compound {
   variant: string | null;
   structure: string;
 }
+
+export type SearchMode = 'database' | 'custom'
+
+export interface SearchResults {
+  smiles: string
+  regNumber: string
+  variant: string | null
+  index: number
+}
