@@ -22,6 +22,7 @@ export const Navigation: React.FC = () => {
               <Link to="/" className="nav-link">Home</Link>
               <Link to="search" className="nav-link">Search</Link>
               <Link to="compound" className="nav-link">Compound Viewer</Link>
+              <Link to="register" className="nav-link">Modify</Link>
             </Nav>
 
             <div className="d-flex">
